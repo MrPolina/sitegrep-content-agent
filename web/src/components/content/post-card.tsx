@@ -12,6 +12,10 @@ function formatDate(iso: string, language: "ru" | "en") {
   });
 }
 
+function readingLabel(min: number, language: "ru" | "en") {
+  return language === "ru" ? `${min} мин чтения` : `${min} min read`;
+}
+
 export function PostCard({ post }: { post: PublishedPost }) {
   return (
     <Link
@@ -35,14 +39,41 @@ export function PostCard({ post }: { post: PublishedPost }) {
           </Badge>
         </div>
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="flex flex-1 flex-col gap-2.5 p-4">
+        <div className="flex flex-wrap gap-1">
+          {post.tags.slice(0, 3).map((t) => (
+            <span
+              key={t}
+              className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
         <h3 className="line-clamp-2 text-sm font-medium leading-tight">
           {post.metaTitle}
         </h3>
         <p className="line-clamp-2 text-xs text-muted-foreground">
           {post.metaDescription}
         </p>
-        <div className="mt-auto flex items-center justify-between pt-3 text-[11px] text-muted-foreground">
+        <div className="mt-auto flex items-center justify-between border-t border-border/60 pt-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Image
+              src={post.author.avatarUrl}
+              alt={post.author.name}
+              width={20}
+              height={20}
+              className="size-5 shrink-0 rounded-full object-cover"
+            />
+            <span className="truncate text-[11px] text-foreground">
+              {post.author.name}
+            </span>
+          </div>
+          <span className="shrink-0 text-[11px] text-muted-foreground">
+            {readingLabel(post.readingTimeMin, post.language)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
           <span className="font-mono">/{post.slug}</span>
           <span>{formatDate(post.publishedAt, post.language)}</span>
         </div>

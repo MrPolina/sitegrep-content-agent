@@ -16,21 +16,54 @@ function formatDate(iso: string, language: "ru" | "en") {
 export function ArticleView({ post }: { post: PublishedPost }) {
   return (
     <article className="space-y-8">
-      <header className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant="outline" className="font-mono text-[10px]">
-            {post.language.toUpperCase()}
-          </Badge>
-          <span>{formatDate(post.publishedAt, post.language)}</span>
-          <span>·</span>
-          <span className="font-mono">/{post.slug}</span>
+      <header className="space-y-5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {post.tags.map((t) => (
+            <span
+              key={t}
+              className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/80"
+            >
+              {t}
+            </span>
+          ))}
         </div>
         <h1 className="text-3xl font-semibold tracking-tight leading-tight">
           {post.metaTitle}
         </h1>
         <p className="text-base text-muted-foreground">{post.metaDescription}</p>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-border py-3">
+          <div className="flex items-center gap-3">
+            <Image
+              src={post.author.avatarUrl}
+              alt={post.author.name}
+              width={36}
+              height={36}
+              className="size-9 rounded-full object-cover"
+            />
+            <div className="flex flex-col text-sm leading-tight">
+              <span className="font-medium">{post.author.name}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {post.author.role}
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" className="font-mono text-[10px]">
+              {post.language.toUpperCase()}
+            </Badge>
+            <span>{formatDate(post.publishedAt, post.language)}</span>
+            <span>·</span>
+            <span>
+              {post.language === "ru"
+                ? `${post.readingTimeMin} мин чтения`
+                : `${post.readingTimeMin} min read`}
+            </span>
+          </div>
+        </div>
+
         {post.githubUrl && (
-          <div className="pt-1">
+          <div>
             <Button asChild variant="outline" size="sm" className="h-8">
               <a href={post.githubUrl} target="_blank" rel="noopener noreferrer">
                 Открыть в GitHub

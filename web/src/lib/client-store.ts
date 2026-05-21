@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  Author,
   Job,
   JobResult,
   JobStep,
@@ -29,7 +30,7 @@ const STEP_ORDER: JobStep[] = [
   "publish-github",
 ];
 
-const STORAGE_KEY = "sitegrep:posts:v1";
+const STORAGE_KEY = "sitegrep:posts:v2";
 
 const IMAGES = [
   "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=675&fit=crop",
@@ -93,10 +94,104 @@ export function transliterate(s: string): string {
     .slice(0, 60);
 }
 
-function pickImage(seed: string) {
+function hashSeed(seed: string): number {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  return IMAGES[h % IMAGES.length];
+  return h;
+}
+
+function pickImage(seed: string) {
+  return IMAGES[hashSeed(seed) % IMAGES.length];
+}
+
+const AUTHORS_RU: Author[] = [
+  {
+    name: "Алексей Морозов",
+    role: "Senior SEO Specialist",
+    avatarUrl: "https://i.pravatar.cc/100?img=12",
+  },
+  {
+    name: "Елена Кравцова",
+    role: "Content Strategist",
+    avatarUrl: "https://i.pravatar.cc/100?img=47",
+  },
+  {
+    name: "Дмитрий Соколов",
+    role: "Technical SEO Lead",
+    avatarUrl: "https://i.pravatar.cc/100?img=33",
+  },
+  {
+    name: "Анна Лебедева",
+    role: "Growth Marketing Lead",
+    avatarUrl: "https://i.pravatar.cc/100?img=49",
+  },
+];
+
+const AUTHORS_EN: Author[] = [
+  {
+    name: "Alex Morrow",
+    role: "Senior SEO Specialist",
+    avatarUrl: "https://i.pravatar.cc/100?img=15",
+  },
+  {
+    name: "Helen Carter",
+    role: "Content Strategist",
+    avatarUrl: "https://i.pravatar.cc/100?img=45",
+  },
+  {
+    name: "David Sutton",
+    role: "Technical SEO Lead",
+    avatarUrl: "https://i.pravatar.cc/100?img=68",
+  },
+  {
+    name: "Anna Lebed",
+    role: "Growth Marketing Lead",
+    avatarUrl: "https://i.pravatar.cc/100?img=44",
+  },
+];
+
+function pickAuthor(seed: string, language: Language): Author {
+  const pool = language === "ru" ? AUTHORS_RU : AUTHORS_EN;
+  return pool[hashSeed(seed + "::author") % pool.length];
+}
+
+interface TagRule {
+  pattern: RegExp;
+  tag: string;
+}
+
+const TAG_RULES: TagRule[] = [
+  { pattern: /\b(ai|искусственн|generative|generativ|overview)/i, tag: "AI" },
+  {
+    pattern: /\b(googlebot|crawl|crawler|краул|fetch|fetching)/i,
+    tag: "Crawling",
+  },
+  { pattern: /\b(discover|core update|обновлен)/i, tag: "Updates" },
+  { pattern: /\b(spam|спам|hijack|hijacking)/i, tag: "Spam Policy" },
+  { pattern: /\b(schema|разметк|markup|structured)/i, tag: "Structured Data" },
+  { pattern: /\b(e-?e-?a-?t|expertise|authority|trust)/i, tag: "E-E-A-T" },
+  { pattern: /\b(content|контент|article|стать)/i, tag: "Content" },
+  { pattern: /\b(technical|техническ)/i, tag: "Technical SEO" },
+];
+
+function deriveTags(topic: string): string[] {
+  const found: string[] = ["SEO"];
+  for (const rule of TAG_RULES) {
+    if (rule.pattern.test(topic) && !found.includes(rule.tag)) {
+      found.push(rule.tag);
+    }
+    if (found.length >= 4) break;
+  }
+  if (found.length < 2) found.push("Google");
+  return found;
+}
+
+function readingTime(md: string): number {
+  const words = md
+    .replace(/[#*_>`\-]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
 }
 
 function articleRu(topic: string) {
@@ -162,6 +257,7 @@ export function buildResult(input: {
 }): JobResult {
   const slug = transliterate(input.topic) || "article";
   const isRu = input.language === "ru";
+  const articleMd = isRu ? articleRu(input.topic) : articleEn(input.topic);
   return {
     slug,
     language: input.language,
@@ -171,11 +267,14 @@ export function buildResult(input: {
     metaDescription: isRu
       ? "Как адаптировать контент под изменения Google в 2026 году — практические шаги и чек-листы."
       : "How to adapt content to Google's 2026 changes — practical steps and checklists.",
-    articleMd: isRu ? articleRu(input.topic) : articleEn(input.topic),
+    articleMd,
     imageUrl: pickImage(slug + input.language),
     gaps: isRu ? GAPS_RU : GAPS_EN,
     sources: SOURCES,
     githubUrl: `https://github.com/${input.repo}/blob/main/posts/${input.language}/${slug}.md`,
+    tags: deriveTags(input.topic),
+    readingTimeMin: readingTime(articleMd),
+    author: pickAuthor(slug, input.language),
   };
 }
 

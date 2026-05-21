@@ -22,6 +22,12 @@ export interface JobSource {
   url: string;
 }
 
+export interface Author {
+  name: string;
+  role: string;
+  avatarUrl: string;
+}
+
 export interface JobResult {
   slug: string;
   language: Language;
@@ -32,6 +38,9 @@ export interface JobResult {
   gaps: string[];
   sources: JobSource[];
   githubUrl: string | null;
+  tags: string[];
+  readingTimeMin: number;
+  author: Author;
 }
 
 export interface PublishedPost extends JobResult {

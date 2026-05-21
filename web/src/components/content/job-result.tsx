@@ -46,6 +46,34 @@ export function JobResultPanel({ result }: Props) {
               <Badge variant="outline" className="font-mono text-[10px]">
                 /{result.slug}
               </Badge>
+              <Badge variant="outline" className="font-mono text-[10px]">
+                {result.language === "ru"
+                  ? `${result.readingTimeMin} мин`
+                  : `${result.readingTimeMin} min`}
+              </Badge>
+              {result.tags.slice(0, 3).map((t) => (
+                <span
+                  key={t}
+                  className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <Image
+                src={result.author.avatarUrl}
+                alt={result.author.name}
+                width={20}
+                height={20}
+                className="size-5 rounded-full object-cover"
+              />
+              <span className="text-xs text-foreground">
+                {result.author.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                · {result.author.role}
+              </span>
             </div>
           </div>
           <div className="flex gap-2">

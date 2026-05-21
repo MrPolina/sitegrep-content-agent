@@ -1,16 +1,34 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "./post-card";
 import type { Language, PublishedPost } from "@/lib/types";
+import { loadAllPosts, getSeedPosts } from "@/lib/client-store";
 
 type Filter = "all" | Language;
 
-export function Gallery({ posts }: { posts: PublishedPost[] }) {
+export function Gallery() {
+  // Initialize with seed posts so SSG output has content; rehydrate from
+  // localStorage on mount.
+  const [posts, setPosts] = useState<PublishedPost[]>(() =>
+    [...getSeedPosts()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+  );
   const [filter, setFilter] = useState<Filter>("all");
+
+  useEffect(() => {
+    const refresh = () => setPosts(loadAllPosts());
+    refresh();
+    const handler = () => refresh();
+    window.addEventListener("sitegrep:posts:update", handler);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("sitegrep:posts:update", handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
 
   const filtered = useMemo(
     () => (filter === "all" ? posts : posts.filter((p) => p.language === filter)),

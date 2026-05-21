@@ -1,12 +1,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { Gallery } from "@/components/content/gallery";
-import { listPosts } from "@/lib/job-store";
-
-export const dynamic = "force-dynamic";
 
 export default function GalleryPage() {
-  const posts = listPosts();
-
   return (
     <>
       <SiteHeader />
@@ -21,13 +16,13 @@ export default function GalleryPage() {
           </p>
         </div>
 
-        <Gallery posts={posts} />
+        <Gallery />
       </main>
 
       <footer className="border-t border-border">
         <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-6 text-[11px] text-muted-foreground">
           <span>Sitegrep · Content Agent</span>
-          <span className="font-mono">MVP — mock pipeline</span>
+          <span className="font-mono">MVP — client-side mock</span>
         </div>
       </footer>
     </>

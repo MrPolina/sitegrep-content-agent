@@ -15,7 +15,7 @@ function formatDate(iso: string, language: "ru" | "en") {
 export function PostCard({ post }: { post: PublishedPost }) {
   return (
     <Link
-      href={`/posts/${post.slug}`}
+      href={{ pathname: "/post", query: { slug: post.slug } }}
       className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground/30"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">

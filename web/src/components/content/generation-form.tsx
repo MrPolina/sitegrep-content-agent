@@ -14,39 +14,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { Language } from "@/lib/types";
+import type { Job, Language } from "@/lib/types";
+import { runPipeline } from "@/lib/client-store";
 
 interface Props {
   disabled?: boolean;
-  onSubmitted: (jobId: string) => void;
+  onStart: (cancel: () => void) => void;
+  onJobUpdate: (job: Job) => void;
 }
 
-export function GenerationForm({ disabled, onSubmitted }: Props) {
+export function GenerationForm({ disabled, onStart, onJobUpdate }: Props) {
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState<Language>("ru");
-  const [repo, setRepo] = useState("");
+  const [repo, setRepo] = useState("MrPolina/seo-content");
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = async (e: FormEvent) => {
+  const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!topic.trim() || !repo.trim()) return;
     setSubmitting(true);
     try {
-      const res = await fetch("/api/v1/content/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.trim(), language, repo: repo.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error ?? "Не удалось создать job");
-        return;
-      }
-      onSubmitted(data.jobId);
+      const cancel = runPipeline(
+        { topic: topic.trim(), language, repo: repo.trim() },
+        (job) => {
+          onJobUpdate(job);
+          if (job.status === "succeeded" || job.status === "failed") {
+            setSubmitting(false);
+          }
+        }
+      );
+      onStart(cancel);
       toast.success("Генерация запущена");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Network error");
-    } finally {
+      toast.error(err instanceof Error ? err.message : "Ошибка запуска");
       setSubmitting(false);
     }
   };

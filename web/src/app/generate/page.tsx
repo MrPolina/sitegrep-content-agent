@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { GenerationForm } from "@/components/content/generation-form";
 import { JobProgress } from "@/components/content/job-progress";
 import { JobResultPanel } from "@/components/content/job-result";
 import { Button } from "@/components/ui/button";
-import { useJob } from "@/lib/use-job";
+import type { Job } from "@/lib/types";
 
-export default function Home() {
-  const [jobId, setJobId] = useState<string | null>(null);
-  const job = useJob(jobId);
+export default function GeneratePage() {
+  const [job, setJob] = useState<Job | null>(null);
+  const cancelRef = useRef<(() => void) | null>(null);
 
-  const isActive =
-    job?.status === "pending" || job?.status === "running";
+  useEffect(() => () => cancelRef.current?.(), []);
+
+  const isActive = job?.status === "pending" || job?.status === "running";
   const isDone = job?.status === "succeeded" && job.result;
 
   return (
@@ -34,7 +35,11 @@ export default function Home() {
         <div className="space-y-6">
           <GenerationForm
             disabled={isActive}
-            onSubmitted={(id) => setJobId(id)}
+            onStart={(cancel) => {
+              cancelRef.current?.();
+              cancelRef.current = cancel;
+            }}
+            onJobUpdate={setJob}
           />
 
           {job && <JobProgress job={job} />}
@@ -46,7 +51,11 @@ export default function Home() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setJobId(null)}
+                onClick={() => {
+                  cancelRef.current?.();
+                  cancelRef.current = null;
+                  setJob(null);
+                }}
                 className="h-8 text-xs text-muted-foreground"
               >
                 Сгенерировать ещё одну статью
@@ -59,7 +68,7 @@ export default function Home() {
       <footer className="border-t border-border">
         <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-6 text-[11px] text-muted-foreground">
           <span>Sitegrep · Content Agent</span>
-          <span className="font-mono">MVP — mock pipeline</span>
+          <span className="font-mono">MVP — client-side mock</span>
         </div>
       </footer>
     </>

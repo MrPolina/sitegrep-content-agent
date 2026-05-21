@@ -1,59 +1,27 @@
-"use client";
-
-import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
-import { GenerationForm } from "@/components/content/generation-form";
-import { JobProgress } from "@/components/content/job-progress";
-import { JobResultPanel } from "@/components/content/job-result";
-import { Button } from "@/components/ui/button";
-import { useJob } from "@/lib/use-job";
+import { Gallery } from "@/components/content/gallery";
+import { listPosts } from "@/lib/job-store";
 
-export default function Home() {
-  const [jobId, setJobId] = useState<string | null>(null);
-  const job = useJob(jobId);
+export const dynamic = "force-dynamic";
 
-  const isActive =
-    job?.status === "pending" || job?.status === "running";
-  const isDone = job?.status === "succeeded" && job.result;
+export default function GalleryPage() {
+  const posts = listPosts();
 
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 sm:py-14">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10 sm:py-14">
         <div className="space-y-2 pb-8">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Генерация SEO-статей
+            Опубликованные статьи
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground">
-            Агент анализирует свежие авторитетные публикации по теме, находит
-            content gaps и пишет оригинальную статью на русском или английском.
-            Результат публикуется в указанный GitHub-репозиторий.
+            Все статьи, сгенерированные агентом и опубликованные в GitHub.
+            Источник — свежие материалы Google Search Central.
           </p>
         </div>
 
-        <div className="space-y-6">
-          <GenerationForm
-            disabled={isActive}
-            onSubmitted={(id) => setJobId(id)}
-          />
-
-          {job && <JobProgress job={job} />}
-
-          {isDone && job.result && <JobResultPanel result={job.result} />}
-
-          {isDone && (
-            <div className="flex justify-center pt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setJobId(null)}
-                className="h-8 text-xs text-muted-foreground"
-              >
-                Сгенерировать ещё одну статью
-              </Button>
-            </div>
-          )}
-        </div>
+        <Gallery posts={posts} />
       </main>
 
       <footer className="border-t border-border">

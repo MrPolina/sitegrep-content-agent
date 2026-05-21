@@ -34,6 +34,12 @@ export interface JobResult {
   githubUrl: string | null;
 }
 
+export interface PublishedPost extends JobResult {
+  topic: string;
+  publishedAt: string;
+  repo: string;
+}
+
 export interface Job {
   id: string;
   topic: string;
